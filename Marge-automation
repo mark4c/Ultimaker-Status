@@ -1,0 +1,48 @@
+alias: WLED Dynamic Progress with Status Colors - Marge
+description: ""
+triggers:
+  - entity_id:
+      - sensor.largemarge_printer_activity
+      - sensor.largemarge_print_job_progress
+      - sensor.largemarge_hotend_1_temperature
+      - sensor.largemarge_bed_temperature
+    trigger: state
+actions:
+  - data:
+      payload: >
+        {% set current = states('sensor.largemarge_hotend_1_temperature') | float %} 
+        {% set target = states('sensor.largemarge_hotend_1_temperature_target') | float %} 
+        {% set ratio = current / target if target > 0 else 0 %} 
+        {% set ratio = ratio if ratio <= 1 else 1 %} 
+        {% set red = (ratio * 255) | int %} 
+        {% set blue = ((1 - ratio) * 255) | int %} 
+        {% set hotendcolor = "%02X%02X%02X" | format(red, 0, blue) %} 
+        {% set currentbed = states('sensor.largemarge_bed_temperature') | float %} 
+        {% set targetbed = states('sensor.largemarge_bed_temperature_target') | float %} 
+        {% set ratiobed = currentbed / targetbed if targetbed > 0 else 0 %} 
+        {% set ratiobed = ratiobed if ratiobed <= 1 else 1 %} 
+        {% set redbed = (ratiobed * 255) | int %} 
+        {% set bluebed = ((1 - ratiobed) * 255) | int %} 
+        {% set bedcolor = "%02X%02X%02X" | format(redbed, 0, bluebed) %} 
+        {
+          "on": true,
+          "bri": {{ (states('input_number.printer_display_brightness') | int * 255 / 100) | int }},
+          "seg": [
+            {"id": 1, 
+             {% if states('sensor.largemarge_printer_activity') == 'paused' %}"i":["000000","000000","000000","ff9305","ff9305","000000","000000","000000","000000","000000","000000","ff9305","ff9305","000000","000000","000000","000000","000000","ff9305","000000","000000","ff9305","000000","000000","000000","000000","ff9305","000000","000000","ff9305","000000","000000","000000","ff9305","ff9305","000000","000000","ff9305","ff9305","000000","000000","ff9305","ff9305","ff9305","ff9305","ff9305","ff9305","000000","ff9305","ff9305","ff9305","000000","000000","ff9305","ff9305","ff9305","ff9305","ff9305","ff9305","ff9305","ff9305","ff9305","ff9305","ff9305"]}
+             {% elif states('sensor.largemarge_printer_activity') == 'maintenance' %}"i":["000000","000000","000000","ff9305","ff9305","000000","000000","000000","000000","000000","000000","ff9305","ff9305","000000","000000","000000","000000","000000","ff9305","000000","000000","ff9305","000000","000000","000000","000000","ff9305","000000","000000","ff9305","000000","000000","000000","ff9305","ff9305","000000","000000","ff9305","ff9305","000000","000000","ff9305","ff9305","ff9305","ff9305","ff9305","ff9305","000000","ff9305","ff9305","ff9305","000000","000000","ff9305","ff9305","ff9305","ff9305","ff9305","ff9305","ff9305","ff9305","ff9305","ff9305","ff9305"]
+             {% elif states('sensor.largemarge_printer_activity') == 'pre_print' %}"i":["000000","000000","{{ hotendcolor }}","{{ hotendcolor }}","{{ hotendcolor }}","{{ hotendcolor }}","000000","000000","000000","000000","{{ hotendcolor }}","{{ hotendcolor }}","{{ hotendcolor }}","{{ hotendcolor }}","000000","000000","000000","000000","000000","{{ hotendcolor }}","{{ hotendcolor }}","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}"]
+             {% elif states('sensor.largemarge_printer_activity') == 'post_print' %}"i":["000000","000000","{{ hotendcolor }}","{{ hotendcolor }}","{{ hotendcolor }}","{{ hotendcolor }}","000000","000000","000000","000000","{{ hotendcolor }}","{{ hotendcolor }}","{{ hotendcolor }}","{{ hotendcolor }}","000000","000000","000000","000000","000000","{{ hotendcolor }}","{{ hotendcolor }}","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","00FF00","00FF00","00FF00","00FF00","00FF00","00FF00","000000","000000","00FF00","00FF00","00FF00","00FF00","00FF00","00FF00","000000","000000","00FF00","00FF00","00FF00","00FF00","00FF00","00FF00","000000","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}"]
+             {% elif states('sensor.largemarge_printer_activity') == 'wait_cleanup' %}"i":["000000","000000","{{ hotendcolor }}","{{ hotendcolor }}","{{ hotendcolor }}","{{ hotendcolor }}","000000","000000","000000","000000","{{ hotendcolor }}","{{ hotendcolor }}","{{ hotendcolor }}","{{ hotendcolor }}","000000","000000","000000","000000","000000","{{ hotendcolor }}","{{ hotendcolor }}","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","00FF00","00FF00","00FF00","00FF00","00FF00","00FF00","000000","000000","00FF00","00FF00","00FF00","00FF00","00FF00","00FF00","000000","000000","00FF00","00FF00","00FF00","00FF00","00FF00","00FF00","000000","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}"]
+             {% elif states('sensor.largemarge_printer_activity') == 'paused' %}"i":["000000","000000","{{ hotendcolor }}","{{ hotendcolor }}","{{ hotendcolor }}","{{ hotendcolor }}","000000","000000","000000","000000","{{ hotendcolor }}","{{ hotendcolor }}","{{ hotendcolor }}","{{ hotendcolor }}","000000","000000","000000","000000","000000","{{ hotendcolor }}","{{ hotendcolor }}","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","000000","00FF00","000000","00FF00","000000","00FF00","000000","000000","000000","00FF00","000000","00FF00","000000","00FF00","000000","000000","000000","000000","000000","000000","000000","00FF00","000000","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}","{{ bedcolor }}"]
+             {% else %}
+             "i": [
+               0, {{ (states('sensor.largemarge_print_job_progress') | int(0) * 64 / 100) | int }},
+               "{% if states('sensor.largemarge_printer_activity') == 'printing' %}00FF00{% elif states('sensor.largemarge_printer_activity') == 'paused' %}0000FF{% elif states('sensor.largemarge_printer_activity') == 'error' %}FF0000{% elif states('sensor.largemarge_printer_activity') == 'idle' %}FFA500{% else %}000000{% endif %}",
+               {{ (states('sensor.largemarge_print_job_progress') | int(0) * 64 / 100) | int }}, 64, "000000"
+             ]
+             {% endif %}
+            }
+          ]
+        }
+    action: rest_command.wled_send_json
